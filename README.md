@@ -1,84 +1,173 @@
-# Turborepo starter
+# Squirrel MVP - Monorepo
 
-This Turborepo starter is maintained by the Turborepo core team.
-
-## Using this example
-
-Run the following command:
-
-```sh
-npx create-turbo@latest
-```
+A multi-tenant scheduling & booking platform for studios (art, pottery, yoga, music, etc.).
 
 ## What's inside?
 
-This Turborepo includes the following packages/apps:
+This monorepo includes the following:
 
-### Apps and Packages
+### Apps
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+- `api`: [NestJS](https://nestjs.com/) backend API
+- `web`: [Next.js](https://nextjs.org/) customer-facing web application
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+### Packages
 
-### Utilities
+- `@repo/types`: Shared TypeScript types and Zod schemas
+- `@repo/utils`: Shared utility functions (date, currency, etc.)
+- `@repo/email`: Email templates and Resend integration
+- `@repo/ui`: React component library
+- `@repo/eslint-config`: Shared ESLint configurations
+- `@repo/typescript-config`: Shared TypeScript configurations
 
-This Turborepo has some additional tools already setup for you:
+## Getting Started
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+### Prerequisites
 
-### Build
+- Node.js >= 18
+- pnpm 9.0.0
 
-To build all apps and packages, run the following command:
+### Installation
 
+```bash
+# Install dependencies
+pnpm install
+
+# Copy environment files
+cp apps/web/.env.example apps/web/.env.local
+cp apps/api/.env.example apps/api/.env
 ```
-cd my-turborepo
-pnpm build
+
+### Development
+
+```bash
+# Run all apps in development mode
+pnpm dev
+
+# Run specific app
+pnpm dev --filter=api
+pnpm dev --filter=web
+
+# Run other commands
+pnpm build        # Build all apps
+pnpm lint         # Lint all apps
+pnpm check-types  # Type check all apps
+pnpm cleanup      # Clean and reinstall everything
 ```
 
-### Develop
+## Using Shared Packages
 
-To develop all apps and packages, run the following command:
+Import shared code in any app:
 
+```typescript
+// In apps/web or apps/api
+import { User, StudioSchema } from '@repo/types';
+import { formatCurrency } from '@repo/utils';
+import { sendEmail } from '@repo/email';
 ```
-cd my-turborepo
+
+## Environments & Deployment
+
+We support three environments: **development**, **staging**, and **production**.
+
+### Environment Files
+
+Each app has environment-specific files:
+- `.env.development` - Development environment
+- `.env.staging` - Staging environment  
+- `.env.production` - Production environment
+
+### Local Development
+
+To run locally with a specific environment:
+
+```bash
+# Copy the appropriate env file
+cp apps/web/.env.development apps/web/.env.local
+cp apps/api/.env.development apps/api/.env
+
+# Run the apps
 pnpm dev
 ```
 
-### Remote Caching
+### Deployment
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+#### Frontend (Vercel)
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+1. Connect your GitHub repo to Vercel
+2. Configure build settings:
+   - Root Directory: `app`
+   - Build Command: `pnpm build --filter=web`
+   - Output Directory: `apps/web/.next`
+3. Set environment variables for each environment in Vercel dashboard
+4. Configure deployment branches:
+   - `main` → Production
+   - `staging` → Staging  
+   - `dev` → Development
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+#### Backend (Railway)
+
+1. Connect your GitHub repo to Railway
+2. Configure build settings:
+   - Root Directory: `app`
+   - Build Command: `pnpm build --filter=api`
+   - Start Command: `pnpm start:prod --filter=api`
+3. Set environment variables for each environment in Railway dashboard
+4. Configure deployment branches:
+   - `main` → Production
+   - `staging` → Staging
+   - `dev` → Development
+
+### Branching Strategy
+
+- `main` - Production deployments
+- `staging` - Staging deployments  
+- `dev` - Development deployments
+- Feature branches merge into `dev`
+
+### CI/CD Pipeline
+
+Deployments are triggered automatically:
+- Push to `dev` → Deploys to development environment
+- Push to `staging` → Deploys to staging environment
+- Push to `main` → Deploys to production environment
+
+## Adding New Packages
+
+1. Create a new directory under `packages/`
+2. Add a `package.json` with the package name (e.g., `@repo/new-package`)
+3. Add the package to the workspace by running `pnpm install`
+4. Import it in any app using the package name
+
+## Tech Stack
+
+- **Frontend**: Next.js 15.3, React 19, Tailwind CSS
+- **Backend**: NestJS 11
+- **Database**: Supabase Postgres with RLS
+- **Auth**: Clerk (organizations = studios)
+- **Payments**: Stripe Connect + Stripe Elements
+- **Email**: Resend
+- **Build System**: Turborepo with pnpm workspaces
+
+## Project Structure
 
 ```
-cd my-turborepo
-npx turbo login
+squirrel/
+├── app/
+│   ├── apps/
+│   │   ├── api/          # NestJS backend
+│   │   └── web/          # Next.js frontend
+│   ├── packages/
+│   │   ├── types/        # Shared TypeScript types
+│   │   ├── utils/        # Shared utilities
+│   │   ├── email/        # Email templates
+│   │   ├── ui/           # React components
+│   │   ├── eslint-config/
+│   │   └── typescript-config/
+│   ├── turbo.json
+│   ├── package.json
+│   └── pnpm-workspace.yaml
+└── documentation/
+    ├── engineering_handoff.md
+    └── tickets.md
 ```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-npx turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
