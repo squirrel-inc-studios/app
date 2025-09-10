@@ -34,20 +34,3 @@ export const StudioSettingsSchema = z.object({
 });
 
 export type StudioSettings = z.infer<typeof StudioSettingsSchema>;
-
-// Input schemas for API operations
-export const CreateStudioInput = z.object({
-  name: z.string().min(1),
-  stripeConnectId: z.string().min(1),
-  settings: z.object({
-    businessIdentifierType: BusinessIdentifierType,
-    businessIdentifier: z.string().min(1),
-    widgetPrimaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).default('#000000'),
-    widgetSecondaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).default('#ffffff'),
-    taxRate: z.number().min(0).max(1),
-    taxName: z.string().min(1),
-    payoutSchedule: PayoutSchedule.default('weekly'),
-  }),
-});
-
-export type CreateStudioInput = z.infer<typeof CreateStudioInput>;
